@@ -63,7 +63,12 @@ namespace VerticalSliceArchitectureTemplate.Abstractions
             ? _value!
             : throw new InvalidOperationException("The value of a failure result can not be accessed.");
 
+        // ✅ SUCCESS implicit conversion
         public static implicit operator Result<TValue>(TValue? value) => Create(value);
+
+        // ✅ ADD THIS (Failure implicit conversion)
+        public static implicit operator Result<TValue>(Error error)
+            => Failure<TValue>(error);
     }
 
 }

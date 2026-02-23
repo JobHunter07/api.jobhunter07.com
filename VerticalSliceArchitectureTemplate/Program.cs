@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Reflection;
+using VerticalSliceArchitectureTemplate.Exceptions;
 using VerticalSliceArchitectureTemplate.Extensions;
 using VerticalSliceArchitectureTemplate.Features.BookFeature.CreateBook;
 using VerticalSliceArchitectureTemplate.Repository;
@@ -25,6 +26,9 @@ builder.Services.AddHealthChecksConfiguration();
 builder.Services.AddValidatorsFromAssembly(typeof(CreateBookValidator).Assembly);
 
 builder.Services.AddHandlersFromAssembly(typeof(Program).Assembly);
+
+builder.Services.AddExceptionHandler<CustomExceptionHandler>()
+            .AddProblemDetails();
 
 
 var app = builder.Build();
@@ -53,7 +57,7 @@ app.MapScalarApiReference(options =>
 });
 
 app.UseHttpsRedirection();
-
+app.UseExceptionHandler();
 
 app.Run();
 

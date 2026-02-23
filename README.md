@@ -288,22 +288,6 @@ Response 200:
 }
 ```
 
-### Setting Up Response Examples in Code
-
-Add examples to endpoints for Scalar documentation:
-
-```csharp
-.WithOpenApi(operation =>
-{
-    operation.Summary = "Create a new book";
-    operation.Description = "Creates a new book and returns the created book details";
-    return operation;
-})
-.Produces<CreateBookResponse>(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status400BadRequest)
-.WithTags(ApiTags.Books);
-```
-
 ---
 
 ## Health Checks
@@ -357,10 +341,6 @@ HTTP/1.1 503 Service Unavailable
   }
 }
 ```
-
-### Custom Health Checks
-
-Create custom health checks for specific services. See `Program.cs` for implementation details and registration of health check endpoints.
 
 ### Health Check Configuration
 
@@ -552,11 +532,30 @@ POST /books
 Response 400:
 {
   "errors": [
-    "Title is required",
-    "ISBN must be a valid ISBN-10 or ISBN-13",
-    "Price must be greater than 0",
-    "Published year cannot be in the future"
-  ]
+    {
+      "code": "NotEmptyValidator",
+      "description": "Title is required",
+      "type": 2
+    },
+    {
+      "code": "NotEmptyValidator",
+      "description": "Author is required",
+      "type": 2
+    },
+    {
+      "code": "NotEmptyValidator",
+      "description": "ISBN is required",
+      "type": 2
+    },
+    {
+      "code": "GreaterThanValidator",
+      "description": "Published year must be a valid year",
+      "type": 2
+    }
+  ],
+  "code": "Validation.General",
+  "description": "One or more validation errors occurred",
+  "type": 2
 }
 ```
 
@@ -617,8 +616,11 @@ POST /books
 
 Response 500:
 {
-  "code": "INTERNAL_SERVER_ERROR",
-  "description": "An unexpected error occurred"
+  "type": "InvalidOperationException",
+  "title": "An error occurred",
+  "status": 500,
+  "detail": "An exception has been raised that is likely due to a transient failure.",
+  "instance": "/books"
 }
 ```
 
@@ -627,9 +629,20 @@ Response 500:
 Response 400:
 {
   "errors": [
-    "ISBN must be a valid ISBN-10 or ISBN-13",
-    "Price must be greater than 0"
-  ]
+    {
+      "code": "NotEmptyValidator",
+      "description": "Title is required",
+      "type": 2
+    },
+    {
+      "code": "GreaterThanValidator",
+      "description": "Published year must be a valid year",
+      "type": 2
+    }
+  ],
+  "code": "Validation.General",
+  "description": "One or more validation errors occurred",
+  "type": 2
 }
 ```
 
