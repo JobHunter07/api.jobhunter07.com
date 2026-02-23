@@ -29,8 +29,9 @@ public static class HandlerRegistrationExtensions
             }
         }
 
-        services.Decorate(typeof(IHandler<,>), typeof(LoggingDecorator<,>));
         services.Decorate(typeof(IHandler<,>), typeof(ValidationDecorator<,>));
+        services.Decorate(typeof(IHandler<,>), typeof(LoggingDecorator<,>));
+        
 
         return services;
     }

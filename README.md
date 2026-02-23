@@ -123,8 +123,8 @@ RuleFor(c => c.Title)
 ### 5. Pipeline Logging
 Decorators log request/response and execution time:
 ```csharp
-ValidationDecorator  → Validates request
 LoggingDecorator     → Logs request, response, duration
+ValidationDecorator  → Validates request
 Handler              → Processes actual business logic
 ```
 
@@ -682,9 +682,9 @@ HTTP Request
     ↓
 MinimalAPI Endpoint (Route binding)
     ↓
-ValidationDecorator (FluentValidation)
-    ↓
 LoggingDecorator (Log request start)
+    ↓
+ValidationDecorator (FluentValidation)
     ↓
 Handler (Business logic)
     ├─ IRepository (Data access)
