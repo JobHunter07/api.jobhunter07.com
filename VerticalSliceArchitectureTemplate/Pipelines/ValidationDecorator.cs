@@ -29,12 +29,37 @@ public sealed class ValidationDecorator<TRequest, TResponse>(
             return await innerHandler.HandleAsync(command, cancellationToken);
         }
 
-        var errorDescription = string.Join("; ", failures.Select(f => f.ErrorMessage));
-        var validationError = Error.Validation(
-            code: "Validation.Failed",
-            description: errorDescription);
+        return CreateFailureResponse(failures);
+    }
 
-        return CreateFailureResponse(validationError);
+    private static TResponse CreateFailureResponse(ValidationFailure[] failures)
+    {
+        if (typeof(TResponse) == typeof(Result))
+        {
+            return (TResponse)(object)Result.Failure(CreateValidationError(failures));
+        }
+
+        if (typeof(TResponse).IsGenericType &&
+            typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
+        {
+            var valueType = typeof(TResponse).GetGenericArguments()[0];
+            var failureMethod = typeof(Result)
+                .GetMethods()
+                .First(m =>
+                    m.Name == nameof(Result.Failure) &&
+                    m.IsGenericMethodDefinition &&
+                    m.GetParameters().Length == 1);
+
+            var typedFailure = failureMethod
+                .MakeGenericMethod(valueType)
+                .Invoke(null, [CreateValidationError(failures)]);
+
+            return (TResponse)typedFailure!;
+        }
+
+        throw new InvalidOperationException(
+            $"ValidationDecorator supports only {nameof(Result)} and {nameof(Result<object>)} responses. " +
+            $"Received {typeof(TResponse).FullName}.");
     }
 
     private static TResponse CreateFailureResponse(Error error)
@@ -66,4 +91,7 @@ public sealed class ValidationDecorator<TRequest, TResponse>(
             $"ValidationDecorator supports only {nameof(Result)} and {nameof(Result<object>)} responses. " +
             $"Received {typeof(TResponse).FullName}.");
     }
+
+    private static ValidationError CreateValidationError(ValidationFailure[] validationFailures) =>
+       new(validationFailures.Select(f => Error.Validation(f.ErrorCode, f.ErrorMessage)).ToArray());
 }

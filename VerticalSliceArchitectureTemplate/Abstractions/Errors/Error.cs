@@ -1,6 +1,6 @@
 ﻿namespace VerticalSliceArchitectureTemplate.Abstractions.Errors;
 
-public sealed record Error(string Code, string? Description = default, ErrorType Type = ErrorType.Failure)
+public record Error(string Code, string? Description = default, ErrorType Type = ErrorType.Failure)
     {
         public static readonly Error None = new(string.Empty);
         public static readonly Error Null = new("Error.NullValue", "The specified result value is null.");
