@@ -1,0 +1,69 @@
+using FluentValidation;
+using FluentValidation.Results;
+using VerticalSliceArchitectureTemplate.Abstractions;
+using VerticalSliceArchitectureTemplate.Abstractions.Errors;
+
+namespace VerticalSliceArchitectureTemplate.Pipelines;
+
+public sealed class ValidationDecorator<TRequest, TResponse>(
+    IEnumerable<IValidator<TRequest>> validators,
+    IHandler<TRequest, TResponse> innerHandler) : IHandler<TRequest, TResponse>
+{
+    public async Task<TResponse> HandleAsync(TRequest command, CancellationToken cancellationToken)
+    {
+        if (!validators.Any())
+        {
+            return await innerHandler.HandleAsync(command, cancellationToken);
+        }
+
+        var context = new ValidationContext<TRequest>(command);
+
+        ValidationFailure[] failures = (await Task.WhenAll(
+                validators.Select(v => v.ValidateAsync(context, cancellationToken))))
+            .SelectMany(r => r.Errors)
+            .Where(f => f is not null)
+            .ToArray();
+
+        if (failures.Length == 0)
+        {
+            return await innerHandler.HandleAsync(command, cancellationToken);
+        }
+
+        var errorDescription = string.Join("; ", failures.Select(f => f.ErrorMessage));
+        var validationError = Error.Validation(
+            code: "Validation.Failed",
+            description: errorDescription);
+
+        return CreateFailureResponse(validationError);
+    }
+
+    private static TResponse CreateFailureResponse(Error error)
+    {
+        if (typeof(TResponse) == typeof(Result))
+        {
+            return (TResponse)(object)Result.Failure(error);
+        }
+
+        if (typeof(TResponse).IsGenericType &&
+            typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
+        {
+            var valueType = typeof(TResponse).GetGenericArguments()[0];
+            var failureMethod = typeof(Result)
+                .GetMethods()
+                .First(m =>
+                    m.Name == nameof(Result.Failure) &&
+                    m.IsGenericMethodDefinition &&
+                    m.GetParameters().Length == 1);
+
+            var typedFailure = failureMethod
+                .MakeGenericMethod(valueType)
+                .Invoke(null, [error]);
+
+            return (TResponse)typedFailure!;
+        }
+
+        throw new InvalidOperationException(
+            $"ValidationDecorator supports only {nameof(Result)} and {nameof(Result<object>)} responses. " +
+            $"Received {typeof(TResponse).FullName}.");
+    }
+}
