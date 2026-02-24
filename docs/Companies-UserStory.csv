@@ -1,0 +1,139 @@
+Work Item Type,Title 1,Title 2,Description,Tags
+User Story,CRM: Company Entity (Core Model),,"## Overview
+
+Implements the foundational Company entity for the CRM system. Includes DB schema, API CRUD, validation, service layer logic, tests, and documentation. This is the core local-first model (no sync or filters).
+
+## Acceptance Criteria
+
+1. Company entity exists in DB.
+2. CRUD endpoints implemented.
+3. Validation rules enforced.
+4. Service layer contains business logic.
+5. Unit tests for validation and service.
+6. Integration tests for CRUD and soft delete.
+7. Documentation updated.
+8. Mermaid diagrams included.
+
+## Notes
+
+- See `docs/crm/companies.md` for ERD and endpoint details.",crm;core-model
+Task,,Create Company DTOs,"- Create request/response DTOs for Company CRUD.
+
+**Requirements**
+
+- Add XML comments.
+- Follow naming conventions.
+
+**Guardrails**
+
+- Do not modify unrelated DTOs.
+- Keep DTOs in `/modules/crm/companies/dto/`.",crm;api;dto
+Task,,Implement POST /crm/companies,"- Implement controller action for creating a company.
+
+**Behavior**
+
+- Validate input.
+- Call service layer.
+- Return standardized error responses.
+
+**Guardrails**
+
+- No DB logic in controller.",crm;api
+Task,,Implement GET /crm/companies/{id},"- Return company by ID or `404` when not found.
+
+**Guardrails**
+
+- Do not expose internal DB fields in responses.",crm;api
+Task,,Implement GET /crm/companies,"- Add pagination and search by `name` and `domain`.
+
+**Guardrails**
+
+- Use shared pagination helper.",crm;api
+Task,,Implement PUT /crm/companies/{id},"- Validate updates and persist allowed fields only.
+
+**Guardrails**
+
+- Do not allow blank `name`.",crm;api
+Task,,Implement DELETE /crm/companies/{id},"- Soft delete a company (mark inactive) rather than physical delete.
+
+**Guardrails**
+
+- Do not physically delete rows.",crm;api
+Task,,Create Companies Table,"- Create DB table with schema:
+  - `CompanyId` UUIDv7
+  - `Name`, `Domain`, `Description`, `Industry`
+  - `WebsiteUrl`, `LinkedInUrl`
+  - `CreatedAt`, `UpdatedAt`, `IsActive`
+
+**Guardrails**
+
+- Use migration system.",crm;db
+Task,,Add Unique Indexes,"- Add unique index on `LOWER(Name)` and `Domain` to ensure case-insensitive uniqueness.",crm;db
+Task,,Add Timestamp Logic,"- Add `CreatedAt` and `UpdatedAt` using shared timestamp helper.
+
+**Guardrails**
+
+- Do not manually set timestamps in controllers.",crm;db
+Task,,Implement CompanyService.Create,"- Implement creation logic in the service layer.
+
+**Behavior**
+
+- Validate inputs.
+- Throw domain exceptions for business rule violations.
+
+**Guardrails**
+
+- No business logic in controllers.",crm;service
+Task,,Implement CompanyService.GetById,"- Return company or `null` when not found.
+
+**Guardrails**
+
+- No DB logic in controller.",crm;service
+Task,,Implement CompanyService.Search,"- Implement search by `name` and `domain` using repository pattern.",crm;service
+Task,,Implement CompanyService.Update,"- Validate updates and enforce uniqueness constraints before saving.",crm;service
+Task,,Implement CompanyService.Delete,"- Soft delete; mark company inactive and update timestamps.
+
+**Guardrails**
+
+- Do not physically delete rows.",crm;service
+Task,,Unit Tests: Validation Rules,"- Test required fields, unique name constraint, and valid URL formats.
+
+**Guardrails**
+
+- No integration logic; use unit tests only.",crm;test
+Task,,Unit Tests: Service Layer,"- Test create, update, and delete logic in service layer with mocked repository.",crm;test
+Task,,Integration Test: Create Company,"- Test end-to-end POST → GET flow using test DB.",crm;test
+Task,,Integration Test: Update Company,"- Test that PUT updates fields correctly and enforces validation.",crm;test
+Task,,Integration Test: Soft Delete,"- Test that DELETE hides company from active queries while preserving data.",crm;test
+Task,,Create docs page /crm/companies.md,"- Add documentation page describing Company entity, schema, endpoints, and diagrams.
+
+- Include mermaid ERD:
+
+```
+erDiagram COMPANY {
+  UUID CompanyId
+  string Name
+  string Domain
+  string Description
+  string Industry
+  string WebsiteUrl
+  string LinkedInUrl
+  datetime CreatedAt
+  datetime UpdatedAt
+  boolean IsActive
+}
+```",crm;docs
+Task,,Update CRM README,"- Add overview, endpoints, and architecture notes to CRM README.",crm;docs
+Task,,Add documentation link to sidebar,"- Add `/crm/companies.md` to docs navigation.",crm;docs
+Task,,Prepare API Repo,"- Clone `https://github.com/JobHunter07/api.jobhunter07.com`.
+- Create folder `/modules/crm/companies/`.
+- Ensure project builds.
+
+**Guardrails**
+
+- Do not modify unrelated modules.",crm;repo;api
+Task,,Prepare Docs Repo,"- Clone docs repo and create `/crm/companies.md`.
+
+**Guardrails**
+
+- Follow docs formatting.",crm;repo;docs
