@@ -11,7 +11,7 @@ namespace JobHunter07.API.Extensions
 
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseNpgsql(configuration.GetConnectionString("connection"));
+                options.UseSqlServer(configuration.GetConnectionString("connection"));
             });
 
             return services;

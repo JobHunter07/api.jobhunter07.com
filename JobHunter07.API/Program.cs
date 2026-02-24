@@ -1,11 +1,10 @@
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore;
-using System.Reflection;
 using JobHunter07.API.Exceptions;
 using JobHunter07.API.Extensions;
 using JobHunter07.API.Features.BookFeature.CreateBook;
 using JobHunter07.API.Repository;
+using Scalar.AspNetCore;
+using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
