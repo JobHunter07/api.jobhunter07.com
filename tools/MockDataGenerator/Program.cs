@@ -1,75 +1,134 @@
-using Bogus;
-using System.Globalization;
-using System.Text.Json;
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-// Streams a JSON array of company objects to a file. Use arguments: <outputPath> <count>
-var output = args.Length > 0 ? args[0] : "Mock-Companies-One-Hundred-Records.json";
-var count = args.Length > 1 && int.TryParse(args[1], out var c) ? c : 100;
+// Composition root using Generic Host
+using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((_, services) =>
+    {
+        // common
+        services.AddSingleton<IOutputFormatter, ConsoleOutputFormatter>();
+        services.AddSingleton<IFileProvider, FileProvider>();
+        // ConsoleMenu has primitive constructor params so create via factory to allow defaults
+        services.AddSingleton<IMenu>(_ => new ConsoleMenu());
 
-Console.WriteLine($"Generating {count:N0} mock companies to {output}...");
+        // feature generators
+        services.AddSingleton<IGenerator, CompanyGenerator>();
 
-// https://github.com/bchavez/Bogus
+        // factory
+        services.AddSingleton<IGeneratorFactory, GeneratorFactory>();
+    })
+    .Build();
 
-//Company
+var services = host.Services;
+var menu = services.GetRequiredService<IMenu>();
+var formatter = services.GetRequiredService<IOutputFormatter>();
+var fileProvider = services.GetRequiredService<IFileProvider>();
+var factory = services.GetRequiredService<IGeneratorFactory>();
 
-//    CompanySuffix - Get a company suffix. "Inc" and "LLC" etc.
-//    CompanyName - Get a company name.
-//    CatchPhrase - Get a company catch phrase.
-//    Bs - Get a company BS phrase.
+var generators = factory.GetAll().ToList();
 
-//Internet
-
-//    Avatar - Generates a legit Internet URL avatar from twitter accounts.
-//    Email - Generates an email address.
-//    ExampleEmail - Generates an example email with @example.com.
-//    UserName - Generates user names.
-//    UserNameUnicode - Generates a user name preserving Unicode characters.
-//    DomainName - Generates a random domain name.
-//    DomainWord - Generates a domain word used for domain names.
-//    DomainSuffix - Generates a domain name suffix like .com, .net, .org
-//    Color - Gets a random aesthetically pleasing color near the base RGB. See here.
-//    Url - Generates a random URL.
-
-var faker = new Faker<CompanyDto>("en")
-    .RuleFor(c => c.CompanyId, f => f.Random.Guid())
-    .RuleFor(c => c.Name, f => $"{f.Company.CompanyName()} {f.Random.Guid().ToString("N").Substring(0,2)}")
-    .RuleFor(c => c.Domain, f => $"{f.Internet.DomainWord()}-{f.Random.AlphaNumeric(2)}.{f.Internet.DomainSuffix()}")
-    .RuleFor(c => c.Description, f => $"{f.Company.CatchPhrase()} {f.Company.Bs()}")
-    .RuleFor(c => c.Industry, f => f.Commerce.Department())
-    .RuleFor(c => c.WebsiteUrl, f => f.Internet.Url())
-    .RuleFor(c => c.LinkedInUrl, f => $"https://www.linkedin.com/company/{f.Company.CompanyName().Replace(" ", "-").ToLowerInvariant()}")
-    .RuleFor(c => c.CreatedAt, f => DateTime.UtcNow)
-    .RuleFor(c => c.UpdatedAt, f => DateTime.UtcNow)
-    .RuleFor(c => c.IsActive, f => true);
-
-using var fs = File.Create(output);
-using var writer = new Utf8JsonWriter(fs, new JsonWriterOptions { Indented = false });
-
-writer.WriteStartArray();
-
-for (int i = 0; i < count; i++)
+// Cancellation support (Ctrl+C)
+using var cts = new System.Threading.CancellationTokenSource();
+Console.CancelKeyPress += (_, e) =>
 {
-    var item = faker.Generate();
-    writer.WriteStartObject();
+    e.Cancel = true; // prevent the process from terminating immediately
+    cts.Cancel();
+    Console.WriteLine("Cancellation requested. Finishing current work and exiting...");
+};
 
-    writer.WriteString("CompanyId", item.CompanyId.ToString());
-    writer.WriteString("Name", item.Name);
-    writer.WriteString("Domain", item.Domain);
-    writer.WriteString("Description", item.Description);
-    writer.WriteString("Industry", item.Industry);
-    writer.WriteString("WebsiteUrl", item.WebsiteUrl);
-    writer.WriteString("LinkedInUrl", item.LinkedInUrl);
-    writer.WriteString("CreatedAt", item.CreatedAt.ToString("o", CultureInfo.InvariantCulture));
-    writer.WriteString("UpdatedAt", item.UpdatedAt.ToString("o", CultureInfo.InvariantCulture));
-    writer.WriteBoolean("IsActive", item.IsActive);
+// If args were provided, run a single non-interactive invocation and exit.
+if (args.Length > 0)
+{
+    var (genId, requestedOutput, count, compress) = menu.GetSelection(args, generators);
+    if (!string.IsNullOrWhiteSpace(genId) && factory.GetById(genId) is IGenerator g)
+    {
+        try
+        {
+            // Build final filename and place under /data/{generator-displayname}/ when relative
+            var baseName = Path.GetFileNameWithoutExtension(requestedOutput);
+            var rawGenName = g.DisplayName ?? g.Id ?? "generator";
+            var genPart = rawGenName.ToLowerInvariant().Replace(" ", "-");
+            genPart = Regex.Replace(genPart, "[^a-z0-9-]", string.Empty);
+            genPart = Regex.Replace(genPart, "-{2,}", "-");
+            var finalFileName = $"{baseName}-{genPart}-{count}-Records{(compress ? ".zip" : ".json")}".ToLowerInvariant();
 
-    writer.WriteEndObject();
+            string finalRequested;
+            if (Path.IsPathRooted(requestedOutput))
+            {
+                // preserve absolute path directory
+                var dirPart = Path.GetDirectoryName(requestedOutput) ?? string.Empty;
+                finalRequested = string.IsNullOrWhiteSpace(dirPart) ? finalFileName : Path.Combine(dirPart, finalFileName);
+            }
+            else
+            {
+                // place into project relative data folder by generator display name
+                var relativeDir = Path.Combine("data", genPart);
+                finalRequested = Path.Combine(relativeDir, finalFileName);
+            }
 
-    if ((i + 1) % 100 == 0)
-        Console.WriteLine($"Generated {i + 1:N0}");
+            var resolved = fileProvider.ResolveOutputPath(finalRequested);
+            formatter.Info($"Generating {count:N0} {g.DisplayName} to {resolved}...");
+            g.Generate(finalRequested, count, compress, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            formatter.Info("Generation cancelled.");
+        }
+    }
+    return;
 }
 
-writer.WriteEndArray();
-writer.Flush();
+// Interactive loop: allow multiple generations until user quits
+while (true)
+{
+    var (genId, requestedOutput, count, compress) = menu.GetSelection(args, generators);
+    if (genId == null)
+        break; // user chose to quit
 
-Console.WriteLine("Generation complete.");
+    var generator = factory.GetById(genId);
+    if (generator == null)
+    {
+        Console.WriteLine("Selected generator not found. Returning to menu.");
+        continue;
+    }
+
+    // Build final filename and place under /data/{generator-displayname}/ when relative
+    var baseName = Path.GetFileNameWithoutExtension(requestedOutput);
+    var rawGenName2 = generator.DisplayName ?? generator.Id ?? "generator";
+    var genPart2 = rawGenName2.ToLowerInvariant().Replace(" ", "-");
+    genPart2 = Regex.Replace(genPart2, "[^a-z0-9-]", string.Empty);
+    genPart2 = Regex.Replace(genPart2, "-{2,}", "-");
+    var finalFileName = $"{baseName}-{genPart2}-{count}-Records{(compress ? ".zip" : ".json")}".ToLowerInvariant();
+
+    string finalRequested;
+    if (Path.IsPathRooted(requestedOutput))
+    {
+        var dirPart = Path.GetDirectoryName(requestedOutput) ?? string.Empty;
+        finalRequested = string.IsNullOrWhiteSpace(dirPart) ? finalFileName : Path.Combine(dirPart, finalFileName);
+    }
+    else
+    {
+        var relativeDir = Path.Combine("data", genPart2);
+        finalRequested = Path.Combine(relativeDir, finalFileName);
+    }
+
+    var resolved = fileProvider.ResolveOutputPath(finalRequested);
+    formatter.Info($"Generating {count:N0} {generator.DisplayName} to {resolved}...");
+    try
+    {
+        generator.Generate(finalRequested, count, compress, cts.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        formatter.Info("Generation cancelled.");
+    }
+
+    Console.WriteLine();
+    Console.WriteLine("Press Enter to return to main menu or Q to quit.");
+    var key = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(key) && key.Equals("Q", StringComparison.OrdinalIgnoreCase))
+        break;
+}

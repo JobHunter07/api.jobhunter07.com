@@ -19,6 +19,10 @@ A specification must define the requirements, constraints, and interfaces for th
 - Include examples and edge cases where applicable.
 - Ensure the document is self-contained and does not rely on external context.
 
+Console UI guideline:
+- When implementing interactive console programs or developer tools, prefer using `Spectre.Console` for rich, professional UIs (prompts, selection lists, tables, progress bars, spinners). Add `Spectre.Console` as an explicit dependency in the project and use its typed prompts, selection prompts, and progress APIs to build accessible, consistent console experiences.
+
+
 *New requirement:* All specification front-matter MUST include a `qa_completed` property once QA verification is finished. The value should be formatted as `YYYY-MM-DD HH:MM EST` (Eastern Time). Example:
 
 ```md
