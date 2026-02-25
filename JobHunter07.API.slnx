@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="JobHunter07.API.Tests/JobHunter07.API.Tests.csproj" />
   <Project Path="JobHunter07.API/JobHunter07.API.csproj" />
+  <Project Path="tools/MockDataGenerator/MockDataGenerator.csproj" />
 </Solution>
