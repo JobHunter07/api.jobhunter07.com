@@ -80,10 +80,10 @@ VerticalSliceArchitectureTemplate/
 │   ├── ValidationDecorator.cs       # FluentValidation pipeline
 │   └── LoggingDecorator.cs          # Logging pipeline
 │
-├── Repository/                       # Data access layer
-│   ├── IRepository.cs
+├── Repository/                       # Shared data-access abstractions
+│   ├── IRepository.cs                # Generic repository interfaces (only truly cross-cutting abstractions)
 │   ├── IUnitOfWork.cs
-│   ├── Repository.cs
+│   ├── Repository.cs                 # Use sparingly; prefer feature-local repositories under `Features/*/Repository/`
 │   └── UnitOfWork.cs
 │
 ├── appsettings.json                 # Configuration
@@ -99,6 +99,7 @@ Each feature is self-contained with its own request/response DTOs, handler, vali
 - **Independent** - Changes to one feature don't affect others
 - **Scalable** - Easy to add new features
 - **Testable** - Each slice can be tested in isolation
+- **Self-contained** - Each feature folder should include everything it needs (handlers, validators, endpoints, DTOs, errors, repository interface + implementation, feature-specific DI/extension helpers, migrations/fixtures when applicable) so the feature can be copied into a separate microservice repository with minimal changes.
 
 ### 2. CQRS Pattern
 - **Commands** - Operations that modify state (Create, Update, Delete)

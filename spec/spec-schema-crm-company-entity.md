@@ -119,6 +119,15 @@ This specification covers:
 - **CON-007**: Internal entity fields (`CreatedAt`, `UpdatedAt`) MUST NOT be settable from request DTOs. `IsActive` MAY be included in response DTOs for administrative consumers.
 - **CON-008**: The `Company` entity class MUST reside in `Entities/` and MUST NOT contain business logic.
 
+### Feature Self-Containment
+
+- **CON-009**: A feature MUST be self-contained. All implementation artifacts for the `Company` feature (handlers, validators, endpoints, DTOs, errors, repository interface and implementation, service layer, EF configuration/extensions, and any feature-specific registrations) MUST live under `Features/CRM/Companies/` or a clearly named sub-folder within it (for example `Features/CRM/Companies/Repository/`, `Features/CRM/Companies/Extensions/`).
+- **CON-010**: Do NOT place feature-specific repositories, extensions, DI registrations, or other implementation files in top-level shared folders (e.g., `Repository/`, `Extensions/`) unless they are genuinely cross-cutting and used by multiple unrelated features. The goal is that the entire `Features/CRM/Companies/` folder can be copied into a new microservice repository with minimal external changes.
+- **CON-011**: Feature-specific DI registration helpers (for example `AddCompanyFeatureServices(this IServiceCollection services)`) SHOULD be provided inside the feature folder under an `Extensions` sub-folder and invoked from the root `Program.cs` to keep registrations discoverable and portable.
+- **CON-012**: Any database migrations, test fixtures, or seed data specific to the feature SHOULD be colocated in the feature folder (e.g., `Features/CRM/Companies/Migrations/` or `Features/CRM/Companies/TestFixtures/`) to simplify extraction and reuse.
+
+These constraints ensure the feature can be moved to its own microservice with minimal friction and reduce coupling between features.
+
 ### Guidelines
 
 - **GUD-001**: Follow the existing `IHandler<TRequest, TResponse>` + `Result<T>` pattern for all handlers.
@@ -126,6 +135,19 @@ This specification covers:
 - **GUD-003**: Errors MUST use named `Error` factory methods (`Error.NotFound`, `Error.Conflict`, `Error.Validation`, etc.) defined in a `CompanyErrors` static class.
 - **GUD-004**: Validators MUST extend `AbstractValidator<T>` and be auto-discovered by the assembly scanner.
 - **GUD-005**: Pagination for the search endpoint MUST accept `page` (int, min 1) and `pageSize` (int, min 1, max 100, default 20) query parameters.
+
+### Coding Style & Primary Constructors
+
+- **GUD-006**: Prefer C# primary constructors for classes that are simple service/handler/repository implementations to keep constructors concise and to make dependency injection declarations terse and consistent. Examples:
+  - Handlers: `public sealed class CreateCompanyHandler(ICompanyRepository repo, IUnitOfWork uow) : IHandler<...> { ... }`
+  - Feature services: `public sealed class CompanyService(ICompanyRepository repo) { ... }`
+  - Feature repositories: `public class CompanyRepository(ApplicationDbContext context) : ICompanyRepository { ... }`
+
+- **GUD-007**: DTOs SHOULD be declared as `record` types using primary constructor syntax where applicable (e.g., `public sealed record CreateCompanyRequest(string Name, string? Domain, ...)`).
+
+- **GUD-008**: Primary constructor parameter names are the canonical injected dependency identifiers and may be referenced directly inside members. Do not duplicate them as separate private fields unless you need different naming or explicit backing fields.
+
+- **GUD-009**: For consistency, prefer the same parameter naming convention used across handlers (e.g., `_companyRepo`) when using primary constructors so the codebase remains uniform.
 
 ### Patterns
 

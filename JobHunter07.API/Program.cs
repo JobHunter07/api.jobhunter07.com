@@ -3,6 +3,7 @@ using JobHunter07.API.Exceptions;
 using JobHunter07.API.Extensions;
 using JobHunter07.API.Features.BookFeature.CreateBook;
 using JobHunter07.API.Repository;
+using JobHunter07.API.Features.Crm.Companies.Extensions;
 using Scalar.AspNetCore;
 using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
 
 builder.Services.AddSQLDatabaseConfiguration(builder.Configuration);
+builder.Services.AddCompanyFeatureServices();
 
 builder.Services.RegisterApiEndpointsFromAssembly(Assembly.GetExecutingAssembly());
 
