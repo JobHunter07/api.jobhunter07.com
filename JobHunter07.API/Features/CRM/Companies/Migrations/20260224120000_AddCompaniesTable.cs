@@ -29,14 +29,12 @@ namespace JobHunter07.API.Migrations
                     table.PrimaryKey("PK_Companies", x => x.CompanyId);
                 });
 
-            // Unique index on Name (SQL Server collation is typically case-insensitive)
             migrationBuilder.CreateIndex(
                 name: "IX_Companies_Name_CI",
                 table: "Companies",
                 column: "Name",
                 unique: true);
 
-            // Filtered unique index on Domain where not null
             migrationBuilder.CreateIndex(
                 name: "IX_Companies_Domain",
                 table: "Companies",
