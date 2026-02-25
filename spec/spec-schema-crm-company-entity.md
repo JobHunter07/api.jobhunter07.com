@@ -1,6 +1,6 @@
 ---
 title: CRM — Company Entity (Core Model)
-version: 1.0
+version: 0.0.1
 date_created: 2026-02-24
 last_updated: 2026-02-24
 owner: JobHunter07 API Team
@@ -37,7 +37,7 @@ This specification covers:
 **Intended audience:** Developers and AI coding agents implementing or reviewing the CRM Company feature.
 
 **Assumptions:**
-- The project uses .NET 10, ASP.NET Core Minimal APIs, EF Core with SQL Server/PostgreSQL, and FluentValidation.
+- The project uses .NET 10, ASP.NET Core Minimal APIs, EF Core with SQL Server, and FluentValidation.
 - The Vertical Slice Architecture pattern and CQRS handler pipeline already exist in the codebase.
 - The existing `IRepository<T>`, `IUnitOfWork`, `IHandler<,>`, `IApiEndpoint`, and `Result<T>` abstractions are reused.
 
@@ -47,7 +47,7 @@ This specification covers:
 
 | Term | Definition |
 |---|---|
-| **CRM** | Customer Relationship Management — the module that manages companies, contacts, and job applications. |
+| **CRM** | Customer Relationship Management — the module that manages companies and contacts. |
 | **Company** | An organization that is a potential employer or professional contact tracked in the system. |
 | **Vertical Slice** | A self-contained feature unit containing its own endpoint, handler, validator, and DTOs. |
 | **CQRS** | Command Query Responsibility Segregation — pattern separating read (query) and write (command) operations. |
@@ -114,7 +114,7 @@ This specification covers:
 
 ### Structural Constraints
 
-- **CON-005**: All feature files MUST reside under `Features/Crm/Companies/` within the `JobHunter07.API` project, using sub-folders per operation (e.g., `CreateCompany/`, `GetCompanyById/`, etc.).
+- **CON-005**: All feature files MUST reside under `Features/CRM/Companies/` within the `JobHunter07.API` project, using sub-folders per operation (e.g., `CreateCompany/`, `GetCompanyById/`, etc.).
 - **CON-006**: DTOs MUST be defined as C# `record` types with XML doc comments.
 - **CON-007**: Internal entity fields (`CreatedAt`, `UpdatedAt`) MUST NOT be settable from request DTOs. `IsActive` MAY be included in response DTOs for administrative consumers.
 - **CON-008**: The `Company` entity class MUST reside in `Entities/` and MUST NOT contain business logic.
@@ -303,7 +303,7 @@ modelBuilder.Entity<Company>(entity =>
 ## 6. Test Automation Strategy
 
 - **Test Levels**: Unit tests and Integration tests.
-- **Frameworks**: xUnit (preferred) or MSTest; Moq for unit test mocking.
+- **Frameworks**: xUnit (preferred); Moq for unit test mocking.
 - **Test project location**: `JobHunter07.API.Tests` project (create if absent) with sub-folders `Unit/Crm/Companies/` and `Integration/Crm/Companies/`.
 
 ### Unit Tests
@@ -341,7 +341,7 @@ The `Company` entity is the foundational CRM record. Job applications, contacts,
 - **UUIDv7 as PK**: Time-ordered UUIDs improve B-tree index performance vs random UUIDs and avoid integer overflow. Consistent with the existing `Book.Id` pattern using `Guid.CreateVersion7()`.
 - **Soft delete (`IsActive`)**: Job hunters need historical visibility of companies they researched; hard-deletes would lose that context.
 - **Case-insensitive unique index on `Name`**: Prevents duplicates such as `"Google"` vs `"google"` without normalizing the stored value.
-- **Filtered unique index on `Domain`**: Allows multiple rows with `NULL` domain while enforcing uniqueness for non-null values — standard SQL Server and PostgreSQL behaviour.
+- **Filtered unique index on `Domain`**: Allows multiple rows with `NULL` domain while enforcing uniqueness for non-null values — standard SQL Server behaviour.
 - **No business logic in endpoints**: Keeps the HTTP layer thin, testable, and consistent with the existing `BookFeature` pattern.
 - **Partial updates via null-coalescing**: Null fields in `UpdateCompanyRequest` mean "keep existing value" — identical to the `UpdateBook` handler pattern already in the codebase.
 - **`CompanyService` as an intermediary**: Unlike the `BookFeature` which calls the repository directly from the handler, the Company feature introduces a service layer to encapsulate the uniqueness checks that require database queries before the write.
@@ -357,7 +357,7 @@ The `Company` entity is the foundational CRM record. Job applications, contacts,
 - **SVC-001**: None for this user story.
 
 ### Infrastructure Dependencies
-- **INF-001**: Relational database (SQL Server or PostgreSQL) — must support filtered/partial unique indexes for the `Domain` constraint and case-insensitive indexing for the `Name` constraint.
+- **INF-001**: Relational database (SQL Server) — must support filtered/partial unique indexes for the `Domain` constraint and case-insensitive indexing for the `Name` constraint.
 
 ### Data Dependencies
 - **DAT-001**: None. This is a greenfield entity with no external data imports required.
