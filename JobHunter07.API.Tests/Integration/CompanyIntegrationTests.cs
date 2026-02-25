@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Xunit;
@@ -100,23 +101,26 @@ public class CompanyIntegrationTests : IClassFixture<CustomWebApplicationFactory
     {
         using var client = _factory.CreateClient();
 
-        // create 5 companies
+        // Use a unique prefix to isolate these test companies from other tests
+        var prefix = $"SearchCo-{System.Guid.NewGuid():N}-";
+
+        // create 5 companies with the unique prefix
+        var createdIds = new List<System.Guid>();
         for (int i = 1; i <= 5; i++)
         {
-            var req = new CreateCompanyRequest($"SearchCo {i}", $"search{i}.example", null, null, null, null);
+            var req = new CreateCompanyRequest($"{prefix}{i}", $"srch-{i}-{System.Guid.NewGuid():N}.example", null, null, null, null);
             var r = await client.PostAsJsonAsync("/crm/companies", req);
             r.EnsureSuccessStatusCode();
+            var created = await r.Content.ReadFromJsonAsync<CreateCompanyResponse>();
+            createdIds.Add(created!.CompanyId);
         }
 
-        // soft-delete one
-        var listResp = await client.GetFromJsonAsync<SearchCompaniesResponse>($"/crm/companies?page=1&pageSize=10");
-        Assert.NotNull(listResp);
-        var toDelete = listResp!.Companies.First().CompanyId;
-        var del = await client.DeleteAsync($"/crm/companies/{toDelete}");
+        // soft-delete one using its known id (avoid global listing)
+        var del = await client.DeleteAsync($"/crm/companies/{createdIds[0]}");
         del.EnsureSuccessStatusCode();
 
-        // search page size 2
-        var page1 = await client.GetFromJsonAsync<SearchCompaniesResponse>($"/crm/companies?page=1&pageSize=2");
+        // search filtering by unique prefix — should return 4 active companies
+        var page1 = await client.GetFromJsonAsync<SearchCompaniesResponse>($"/crm/companies?name={System.Uri.EscapeDataString(prefix)}&page=1&pageSize=2");
         Assert.NotNull(page1);
         Assert.Equal(2, page1!.PageSize);
         Assert.Equal(1, page1.Page);

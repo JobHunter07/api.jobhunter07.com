@@ -36,7 +36,7 @@ public class ExpandedCompanyTests : IClassFixture<CustomWebApplicationFactory>
         var badRequestCount = results.Count(r => r.StatusCode == System.Net.HttpStatusCode.BadRequest);
 
         Assert.Equal(1, successCount);
-        Assert.True(badRequestCount >= 1, "the other concurrent attempts should be rejected as conflicts");
+        Assert.True(badRequestCount >= 1, "the other concurrent attempts should be rejected as bad requests (this API maps conflicts to 400 BadRequest)");
     }
 
     [Fact]
