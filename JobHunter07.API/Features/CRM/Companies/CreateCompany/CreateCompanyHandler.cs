@@ -36,7 +36,24 @@ public sealed class CreateCompanyHandler(
         };
 
         await _companyRepo.AddAsync(company, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.CommitAsync(cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+        {
+            // Handle SQL Server unique constraint races by mapping to a conflict error
+            if (dbEx.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && (sqlEx.Number == 2627 || sqlEx.Number == 2601))
+            {
+                // Best-effort: if domain was provided, return domain conflict, otherwise name conflict
+                if (!string.IsNullOrWhiteSpace(command.Domain))
+                    return CompanyErrors.DomainConflict(command.Domain);
+
+                return CompanyErrors.NameConflict(command.Name);
+            }
+
+            throw;
+        }
 
         var resp = new CreateCompanyResponse(company.CompanyId, company.Name, company.Domain, company.Description, company.Industry, company.WebsiteUrl, company.LinkedInUrl, company.CreatedAt, company.UpdatedAt, company.IsActive);
         return Result.Success(resp);

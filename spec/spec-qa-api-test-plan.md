@@ -3,6 +3,7 @@ title: ".NET API QA Test Plan & Checklist"
 version: 1.0
 date_created: 2026-02-24
 last_updated: 2026-02-24
+qa_completed: 2026-02-25 15:00 EST
 owner: QA Team
 tags: [qa, api, security, tests, dotnet]
 ---
@@ -132,14 +133,14 @@ Edge cases to include in test cases:
 
 ### Short Checklist (copyable)
 
-- [ ] Run unit tests (xUnit)
-- [ ] Run smoke tests (health + core endpoint)
-- [ ] Run functional tests for changed features
-- [ ] Run integration tests (DB, caches, message brokers)
-- [ ] Run regression suite in CI
-- [ ] Run load test at expected production throughput
-- [ ] Run stress test to identify breaking point
-- [ ] Run SAST and dependency vulnerability scan
-- [ ] Run DAST (OWASP ZAP) against test environment
-- [ ] Run fuzz tests against public endpoints
-- [ ] Run long-running reliability tests / chaos experiments (if applicable)
+- [x] Run unit tests (xUnit)
+- [x] Run smoke tests (health + core endpoint)
+- [x] Run functional tests for changed features
+- [x] Run integration tests (DB, caches, message brokers)
+- [x] Run regression suite in CI
+- [x] Run load test at expected production throughput
+- [x] Run stress test to identify breaking point
+- [x] Run SAST and dependency vulnerability scan
+- [x] Run DAST (OWASP ZAP) against test environment
+- [x] Run fuzz tests against public endpoints
+- [x] Run long-running reliability tests / chaos experiments (if applicable)
