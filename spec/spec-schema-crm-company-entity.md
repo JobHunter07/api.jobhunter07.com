@@ -3,6 +3,7 @@ title: CRM — Company Entity (Core Model)
 version: 0.0.1
 date_created: 2026-02-24
 last_updated: 2026-02-24
+qa_completed: 2026-02-25 15:00 EST
 owner: JobHunter07 API Team
 tags: schema, crm, company, data, api, cqrs, vertical-slice
 ---
@@ -496,23 +497,23 @@ PUT /crm/companies/01954d9e-0000-7000-8000-000000000001
 
 The implementation is compliant with this specification when ALL of the following are true:
 
-- [ ] `Companies` table exists in the database with all specified columns, column types, constraints, and indexes.
-- [ ] `CompanyId` is generated as UUIDv7 (`Guid.CreateVersion7()`) at creation time.
-- [ ] `CreatedAt` and `UpdatedAt` are set to UTC on creation; `UpdatedAt` is refreshed on every update and soft-delete operation.
-- [ ] `POST /crm/companies` creates an active company and returns a `CompanyResponse` with `200 OK`.
-- [ ] `GET /crm/companies/{id}` returns `200 OK` + `CompanyResponse` for active companies; returns `404` for non-existent or soft-deleted companies.
-- [ ] `GET /crm/companies` returns a paginated `SearchCompaniesResponse` filtered by all provided query parameters; excludes soft-deleted companies.
-- [ ] `PUT /crm/companies/{id}` performs partial updates — null request fields are ignored and retain their prior database values.
-- [ ] `DELETE /crm/companies/{id}` sets `IsActive = false` without physically removing the database row.
-- [ ] Duplicate name (case-insensitive) returns `409 Conflict` with `Companies.NameConflict`.
-- [ ] Duplicate non-null domain returns `409 Conflict` with `Companies.DomainConflict`.
-- [ ] Invalid `WebsiteUrl` returns `400 Bad Request` with a descriptive validation message.
-- [ ] Invalid `LinkedInUrl` (not a company profile URL) returns `400 Bad Request` with a descriptive validation message.
-- [ ] All handlers execute through the `ValidationDecorator` → `LoggingDecorator` → `Handler` pipeline.
-- [ ] All unit tests pass.
-- [ ] All integration tests pass against a real database.
-- [ ] Minimum 80% line coverage for all files under `Features/Crm/Companies/`.
-- [ ] OpenAPI docs expose all 5 endpoints tagged `"companies"` with correct typed response annotations.
+- [x] `Companies` table exists in the database with all specified columns, column types, constraints, and indexes.
+- [x] `CompanyId` is generated as UUIDv7 (`Guid.CreateVersion7()`) at creation time.
+- [x] `CreatedAt` and `UpdatedAt` are set to UTC on creation; `UpdatedAt` is refreshed on every update and soft-delete operation.
+- [x] `POST /crm/companies` creates an active company and returns a `CompanyResponse` with `200 OK`.
+- [x] `GET /crm/companies/{id}` returns `200 OK` + `CompanyResponse` for active companies; returns `404` for non-existent or soft-deleted companies.
+- [x] `GET /crm/companies` returns a paginated `SearchCompaniesResponse` filtered by all provided query parameters; excludes soft-deleted companies.
+- [x] `PUT /crm/companies/{id}` performs partial updates — null request fields are ignored and retain their prior database values.
+- [x] `DELETE /crm/companies/{id}` sets `IsActive = false` without physically removing the database row.
+- [x] Duplicate name (case-insensitive) returns `409 Conflict` with `Companies.NameConflict`.
+- [x] Duplicate non-null domain returns `409 Conflict` with `Companies.DomainConflict`.
+- [x] Invalid `WebsiteUrl` returns `400 Bad Request` with a descriptive validation message.
+- [x] Invalid `LinkedInUrl` (not a company profile URL) returns `400 Bad Request` with a descriptive validation message.
+- [x] All handlers execute through the `ValidationDecorator` → `LoggingDecorator` → `Handler` pipeline.
+- [x] All unit tests pass.
+- [x] All integration tests pass against a real database.
+- [x] Minimum 80% line coverage for all files under `Features/Crm/Companies/`.
+- [x] OpenAPI docs expose all 5 endpoints tagged `"companies"` with correct typed response annotations.
 
 ---
 

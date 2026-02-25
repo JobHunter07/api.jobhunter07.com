@@ -19,6 +19,16 @@ A specification must define the requirements, constraints, and interfaces for th
 - Include examples and edge cases where applicable.
 - Ensure the document is self-contained and does not rely on external context.
 
+Console UI guideline:
+- When implementing interactive console programs or developer tools, prefer using `Spectre.Console` for rich, professional UIs (prompts, selection lists, tables, progress bars, spinners). Add `Spectre.Console` as an explicit dependency in the project and use its typed prompts, selection prompts, and progress APIs to build accessible, consistent console experiences.
+
+
+*New requirement:* All specification front-matter MUST include a `qa_completed` property once QA verification is finished. The value should be formatted as `YYYY-MM-DD HH:MM EST` (Eastern Time). Example:
+
+```md
+qa_completed: 2026-02-25 15:00 EST
+```
+
 If asked, you will create the specification as a specification file.
 
 The specification should be saved in the [/spec/](/spec/) directory and named according to the following convention: `spec-[a-z0-9-]+.md`, where the name should be descriptive of the specification's content and starting with the highlevel purpose, which is one of [schema, tool, data, infrastructure, process, architecture, or design].
@@ -33,6 +43,7 @@ title: [Concise Title Describing the Specification's Focus]
 version: [Optional: e.g., 1.0, Date]
 date_created: [YYYY-MM-DD]
 last_updated: [Optional: YYYY-MM-DD]
+qa_completed: [Optional: YYYY-MM-DD HH:MM EST]
 owner: [Optional: Team/Individual responsible for this spec]
 tags: [Optional: List of relevant tags or categories, e.g., `infrastructure`, `process`, `design`, `app` etc]
 ---
@@ -77,8 +88,8 @@ tags: [Optional: List of relevant tags or categories, e.g., `infrastructure`, `p
 [Define the testing approach, frameworks, and automation requirements.]
 
 - **Test Levels**: Unit, Integration, End-to-End
-- **Frameworks**: MSTest, FluentAssertions, Moq (for .NET applications)
-- **Test Data Management**: [approach for test data creation and cleanup]
+- **Frameworks**: XUnit, Moq (DO NOT USE FluentAssertions!)
+- **Test Data Management**: Use Bogus for realistic test data generation, avoid hard-coded values.
 - **CI/CD Integration**: [automated testing in GitHub Actions pipelines]
 - **Coverage Requirements**: [minimum code coverage thresholds]
 - **Performance Testing**: [approach for load and performance testing]
