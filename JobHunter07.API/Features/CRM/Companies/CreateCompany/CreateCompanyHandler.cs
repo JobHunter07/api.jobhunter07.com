@@ -45,9 +45,10 @@ public sealed class CreateCompanyHandler(
             // Handle SQL Server unique constraint races by mapping to a conflict error
             if (dbEx.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && (sqlEx.Number == 2627 || sqlEx.Number == 2601))
             {
-                // Best-effort: if domain was provided, return domain conflict, otherwise name conflict
-                if (!string.IsNullOrWhiteSpace(command.Domain))
-                    return CompanyErrors.DomainConflict(command.Domain);
+                // Parse the error message to determine which unique constraint was violated
+                var msg = sqlEx.Message ?? string.Empty;
+                if (msg.Contains("IX_Companies_Domain"))
+                    return CompanyErrors.DomainConflict(command.Domain ?? string.Empty);
 
                 return CompanyErrors.NameConflict(command.Name);
             }
