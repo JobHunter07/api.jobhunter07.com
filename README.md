@@ -235,6 +235,15 @@ dotnet build
 dotnet run
 ```
 
+## Tests
+
+- **Test Project:** The automated tests are in [JobHunter07.API.Tests](JobHunter07.API.Tests) and mirror the application `Features/` folder structure so tests map directly to feature slices.
+- **Run All Tests:** Use `dotnet test JobHunter07.API.Tests` to execute the full test suite (unit + integration when configured).
+- **Run a Single Test:** Use `dotnet test --filter FullyQualifiedName~Namespace.ClassName.MethodName` to run a specific test.
+- **Integration Tests:** Integration tests require a test database (LocalDB by default). Ensure the connection string in `appsettings.Development.json` points to `(localdb)\\MSSQLLocalDB` or supply a test DB via environment variables before running tests.
+- **CI Guidance:** Run unit tests on pull requests; run integration and security scans in CI stages or nightly pipelines. Include load/stress runs in scheduled pipelines or performance test jobs.
+
+
 ## Scalar API Testing UI
 
 Scalar is a modern, beautiful alternative to Swagger UI for testing and exploring APIs.

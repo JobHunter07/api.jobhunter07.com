@@ -1,5 +1,6 @@
 using JobHunter07.API.Abstractions;
 using JobHunter07.API.Constants;
+using JobHunter07.API.Extensions;
 
 namespace JobHunter07.API.Features.Crm.Companies.UpdateCompany;
 
@@ -12,9 +13,9 @@ internal sealed class UpdateCompanyEndpoint : IApiEndpoint
             // Ensure id from route is used
             var cmd = new UpdateCompanyRequest(id, request.Name, request.Domain, request.Description, request.Industry, request.WebsiteUrl, request.LinkedInUrl);
             var result = await handler.HandleAsync(cmd, cancellationToken);
-            return result.Match(
-                onSuccess: () => Results.Ok(result.Value),
-                onFailure: error => Results.BadRequest(error));
+                return result.Match(
+                    onSuccess: resp => Results.Ok(resp),
+                    onFailure: error => Results.BadRequest(error));
         })
         .WithTags(ApiTags.Companies)
         .Produces<UpdateCompanyResponse>(StatusCodes.Status200OK)

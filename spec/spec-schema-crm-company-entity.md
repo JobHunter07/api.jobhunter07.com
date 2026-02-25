@@ -7,6 +7,13 @@ owner: JobHunter07 API Team
 tags: schema, crm, company, data, api, cqrs, vertical-slice
 ---
 
+### Tests Location & Structure
+
+- **CON-013**: Automated tests (unit, integration, functional) MUST NOT be placed inside the feature folder. Tests belong in a standalone test project (for example `JobHunter07.API.Tests`) at the repository root. The test project SHOULD mirror the application folder structure for clarity and easy navigation; e.g., tests for `Features/CRM/Companies/` live under `JobHunter07.API.Tests/Features/CRM/Companies/`.
+
+- **CON-014**: Integration tests that require infrastructure (databases, message brokers) MAY use folders under the test project to store test fixtures, docker-compose files, or scripts (e.g., `JobHunter07.API.Tests/Features/CRM/Companies/Fixtures/`).
+---
+
 # Introduction
 
 This specification defines the foundational `Company` entity for the CRM (Customer Relationship Management) module of the JobHunter07 API. It covers the database schema, data contracts, CRUD API surface, service layer responsibilities, repository interface, validation rules, and test strategy required to implement the Company entity as a self-contained vertical slice.

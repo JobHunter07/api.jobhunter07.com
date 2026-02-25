@@ -12,7 +12,7 @@ internal sealed class CreateCompanyEndpoint : IApiEndpoint
         {
             var result = await handler.HandleAsync(command, cancellationToken);
             return result.Match(
-                onSuccess: () => Results.Ok(result.Value),
+                onSuccess: resp => Results.Ok(resp),
                 onFailure: error => Results.BadRequest(error));
         })
         .WithTags(ApiTags.Companies)

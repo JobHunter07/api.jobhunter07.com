@@ -1,4 +1,5 @@
 using JobHunter07.API.Abstractions;
+using JobHunter07.API.Repository;
 using JobHunter07.API.Entities;
 using JobHunter07.API.Features.Crm.Companies.Repository;
 

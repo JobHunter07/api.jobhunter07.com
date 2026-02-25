@@ -1,5 +1,6 @@
 using JobHunter07.API.Abstractions;
 using JobHunter07.API.Constants;
+using JobHunter07.API.Extensions;
 
 namespace JobHunter07.API.Features.Crm.Companies.SearchCompanies;
 
@@ -12,7 +13,7 @@ internal sealed class SearchCompaniesEndpoint : IApiEndpoint
             var request = new SearchCompaniesRequest(name, domain, industry, page, pageSize);
             var result = await handler.HandleAsync(request, cancellationToken);
             return result.Match(
-                onSuccess: () => Results.Ok(result.Value),
+                onSuccess: resp => Results.Ok(resp),
                 onFailure: error => Results.BadRequest(error));
         })
         .WithTags(ApiTags.Companies)
